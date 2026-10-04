@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aquaculture WQMS | Predictive Intelligence v4</title>
+  <meta name="description" content="AI-powered aquaculture water quality monitoring with XGBoost ML and PySR symbolic regression predictions."/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Pro+Display:wght@400;500;600&display=swap');
+
+    /* ── TOKENS (DARK MODE) ── */
+    :root {
+      --bg:          #000000; /* Pure black background for OLED pop */
+      --bg2:         #1C1C1E; /* Deep gray */
+      --surface:     #1C1C1E; /* Elevated surface */
+      --surface2:    #2C2C2E; /* Secondary elevated surface */
+      --surface3:    rgba(28,28,30,0.85); /* Glass dark surface */
+      --border:      rgba(255,255,255,0.1);
+      --border2:     rgba(255,255,255,0.15);
+      
+      /* Neon, popping colors for Dark Mode */
+      --blue:        #0A84FF;
+      --blue-dim:    rgba(10,132,255,0.2);
+      --blue-glow:   rgba(10,132,255,0.4);
+      
+      --green:       #30D158; 
+      --green-dim:   rgba(48,209,88,0.2);
+      
+      --amber:       #FF9F0A; 
+      --amber-dim:   rgba(255,159,10,0.2);
+      
+      --red:         #FF453A; 
+      --red-dim:     rgba(255,69,58,0.2);
+      
+      --purple:      #BF5AF2; 
+      --purple-dim:  rgba(191,90,242,0.2);
+      
+      --text:        #FFFFFF; /* White primary text */
+      --text2:       #EBEBF5; /* Secondary text */
+      --text3:       #8E8E93; /* Tertiary text */
+      
+      --font:        'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono:   'SF Mono', 'Fira Mono', monospace;
+      
+      --radius:      20px;
+      --radius-sm:   12px;
+      --radius-xs:   8px;
+      
+      --shadow-sm:   0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.4);
+      --shadow:      0 4px 16px rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.5);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
+      
+      --glass-bg:    rgba(28,28,30,0.65); /* Dark glass */
+      --glass-border:rgba(255,255,255,0.15);
+      --blur:        blur(24px) saturate(200%);
+    }
+
+    /* ── KEYFRAMES ── */
+    @keyframes fade-up {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes fade-in {
+      from { opacity:0; } to { opacity:1; }
+    }
+    @keyframes shimmer-safe {
+      0%   { background-position: -300px 0; }
+      100% { background-position: 300px 0; }
+    }
+    @keyframes pulse-warn {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,149,0,0); border-color: rgba(255,149,0,0.5); }
+      50%      { box-shadow: 0 0 12px 6px rgba(255,149,0,0.3); border-color: rgba(255,149,0,1); }
+    }
+    @keyframes shake-danger {
+      0%,100% { transform:translateX(0); box-shadow: 0 0 0 0 rgba(255,59,48,0); }
+      15%      { transform:translateX(-4px); box-shadow: 0 0 12px 4px rgba(255,59,48,0.3); }
+      30%      { transform:translateX(4px); }
+      45%      { transform:translateX(-3px); }
+      60%      { transform:translateX(3px); }
+      75%      { transform:translateX(-2px); box-shadow: 0 0 14px 6px rgba(255,59,48,0.2); }
+    }
+    @keyframes skeleton-sweep {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    @keyframes spin-ring {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes blink-dot {
+      0%,80%,100% { transform:scale(0.6); opacity:0.3; }
+      40%          { transform:scale(1); opacity:1; }
+    }
+    @keyframes glass-ripple {
+      to { transform:scale(4); opacity:0; }
+    }
+    @keyframes pulse-dot {
+      0%,100% { transform:scale(1); opacity:1; }
+      50%      { transform:scale(1.6); opacity:0.5; }
+    }
+    @keyframes slide-in-right {
+      from { opacity:0; transform:translateX(10px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    @keyframes float-y {
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-3px); }
+    }
+    @keyframes border-spin {
+      to { --angle: 360deg; }
+    }
+    @keyframes count-up {
+      from { opacity:0; transform:scale(0.8); }
+      to   { opacity:1; transform:scale(1); }
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.15); border-radius:4px; }
+
+    /* ── LAYOUT ── */
+    .page { max-width:1440px; margin:0 auto; padding:24px 32px; }
+    .main-grid {
+      display:grid;
+      grid-template-columns: 310px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+    .right-col { display:flex; flex-direction:column; gap:16px; }
+    .top-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .flex-col { display:flex; flex-direction:column; gap:16px; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .hidden { display:none !important; }
+
+    /* ── HEADER ── */
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 0 32px;
+      margin-bottom:24px;
+      animation: fade-up 0.5s ease both;
+    }
+    .header-left {
+      display:flex; align-items:center; gap:16px;
+    }
+    .logo-container {
+      display:flex; align-items:center; justify-content:center;
+      width:48px; height:48px; border-radius:12px;
+      background: linear-gradient(135deg, var(--blue), #BF5AF2);
+      box-shadow: 0 4px 20px rgba(10,132,255,0.4);
+      flex-shrink:0;
+    }
+    .logo-svg {
+      width:24px; height:24px; color:#ffffff;
+    }
+    .header-title {
+      font-size:28px; font-weight:700; letter-spacing:-0.5px;
+      color: var(--text); line-height:1.2;
+    }
+    .header-title span { color: var(--blue); }
+    .header-sub {
+      font-size:13px; color:var(--text3); margin-top:2px;
+      font-weight:500; letter-spacing:0.02em;
+    }
+    .header-right { display:flex; align-items:center; gap:12px; }
+    .live-badge {
+      display:flex; align-items:center; gap:6px;
+      background:var(--green-dim);
+      border:1px solid rgba(52,199,89,0.25);
+      border-radius:20px; padding:5px 12px;
+      font-size:11px; font-weight:600; color:var(--green);
+    }
+    .live-dot {
+      width:6px; height:6px; background:var(--green);
+      border-radius:50%; animation:pulse-dot 1.8s ease-in-out infinite;
+    }
+    .ver-tag {
+      background:var(--surface2); border:1px solid var(--border);
+      border-radius:var(--radius-xs); padding:4px 10px;
+      font-size:11px; color:var(--text2); font-family:var(--font-mono);
+    }
+
+    /* ── GLASS CARD ── */
+    .card {
+      background:var(--glass-bg);
+      -webkit-backdrop-filter:var(--blur);
+      backdrop-filter:var(--blur);
+      border:1px solid var(--glass-border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+      transition:box-shadow 0.3s, transform 0.3s;
+      animation: fade-up 0.5s ease both;
+    }
+    .card:hover {
+      box-shadow:var(--shadow-lg);
+      transform:translateY(-1px);
+    }
+    .card-title {
+      font-size:11px; font-weight:600; color:var(--text2);
+      letter-spacing:0.08em; text-transform:uppercase;
+      margin-bottom:16px; display:flex; align-items:center; gap:8px;
+    }
+    .card-title .dot { width:5px; height:5px; border-radius:50%; background:var(--blue); }
+
+    /* ── INPUTS ── */
+    .input-group { margin-bottom:12px; }
+    .input-label {
+      display:block; font-size:11px; font-weight:500; color:var(--text2);
+      letter-spacing:0.04em; text-transform:uppercase; margin-bottom:5px;
+    }
+    .input-field {
+      width:100%;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:10px 14px;
+      color:var(--text); font-size:14px;
+      font-family:var(--font-mono); font-weight:500;
+      outline:none;
+      transition:border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .input-field:focus {
+      background:var(--surface);
+      border-color:var(--blue);
+      box-shadow:0 0 0 3px var(--blue-glow);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      position:relative; overflow:hidden; cursor:pointer;
+      border:none; border-radius:var(--radius-sm);
+      font-family:var(--font); font-weight:600; font-size:14px;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .btn:active { transform:scale(0.97); }
+    .btn-primary {
+      background:var(--blue);
+      color:#fff;
+      padding:12px 20px; width:100%; margin-top:8px;
+      box-shadow:0 4px 16px var(--blue-glow);
+      letter-spacing:0.01em;
+    }
+    .btn-primary:hover {
+      background:rgba(0,122,255,0.7);
+      -webkit-backdrop-filter:blur(16px) saturate(180%);
+      backdrop-filter:blur(16px) saturate(180%);
+      box-shadow:0 8px 32px var(--blue-glow);
+      transform:translateY(-2px);
+    }
+    .btn-send {
+      background:var(--surface3);
+      color:var(--blue);
+      border:1px solid var(--border2);
+      padding:10px 18px;
+      white-space:nowrap;
+      -webkit-backdrop-filter:blur(10px);
+      backdrop-filter:blur(10px);
+    }
+    .btn-send:hover {
+      background:rgba(0,122,255,0.15);
+      -webkit-backdrop-filter:blur(16px) saturate(180%);
+      backdrop-filter:blur(16px) saturate(180%);
+      border-color:var(--blue);
+    }
+
+    .btn .ripple-el {
+      position:absolute; border-radius:50%;
+      background:rgba(0,0,0,0.08); transform:scale(0);
+      animation:glass-ripple 0.5s linear; pointer-events:none;
+    }
+
+    /* ── SPINNER ── */
+    .spinner {
+      width:16px; height:16px; border-radius:50%;
+      border:2px solid rgba(255,255,255,0.3);
+      border-top-color:#fff;
+      animation:spin-ring 0.7s linear infinite;
+      flex-shrink:0;
+    }
+    .spinner-dark {
+      border-color:rgba(0,0,0,0.1);
+      border-top-color:var(--blue);
+    }
+
+    /* ── SKELETON LOADER ── */
+    .skeleton {
+      background:linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.10) 50%, rgba(0,0,0,0.06) 75%);
+      background-size:400px 100%;
+      animation:skeleton-sweep 1.2s ease-in-out infinite;
+      border-radius:6px;
+      color:transparent !important;
+      user-select:none;
+    }
+
+    /* ── STATUS BADGES ── */
+    .status-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 14px; border-radius:20px;
+      font-size:11px; font-weight:600; letter-spacing:0.06em;
+      border:1px solid transparent; transition:all 0.3s;
+    }
+    .badge-standby {
+      background:var(--surface2); color:var(--text2);
+      border-color:var(--border2);
+    }
+    .badge-safe {
+      background:linear-gradient(90deg, rgba(40,205,65,0.15) 0%, rgba(40,205,65,0.35) 50%, rgba(40,205,65,0.15) 100%);
+      background-size:300px 100%;
+      animation:shimmer-safe 2s linear infinite;
+      color:var(--green); border-color:rgba(40,205,65,0.5);
+      box-shadow: 0 0 12px rgba(40,205,65,0.2);
+    }
+    .badge-warning {
+      background:var(--amber-dim); color:var(--amber);
+      border-color:rgba(255,149,0,0.6);
+      animation:pulse-warn 1.4s ease-in-out infinite;
+    }
+    .badge-unsafe {
+      background:var(--red-dim); color:var(--red);
+      border-color:rgba(255,59,48,0.6);
+      animation:shake-danger 1.2s ease-in-out infinite;
+      box-shadow: 0 0 12px rgba(255,59,48,0.25);
+    }
+
+    /* ── HEALTH BAR ── */
+    .health-bar-track {
+      height:5px; background:var(--surface2);
+      border-radius:3px; overflow:hidden; margin-top:8px;
+    }
+    .health-bar-fill {
+      height:100%; border-radius:3px;
+      background:linear-gradient(90deg,var(--red),var(--amber),var(--green));
+      transition:width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── CHIPS ── */
+    .chip {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:3px 9px; border-radius:20px;
+      font-size:10px; font-weight:600; letter-spacing:0.05em;
+    }
+    .chip-safe    { background:var(--green-dim); color:var(--green); border:1px solid rgba(40,205,65,0.4);
+                    background:linear-gradient(90deg,rgba(40,205,65,0.1) 0%,rgba(40,205,65,0.25) 50%,rgba(40,205,65,0.1) 100%);
+                    background-size:200px 100%; animation:shimmer-safe 2.2s linear infinite; }
+    .chip-warning { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(255,149,0,0.5);
+                    animation:pulse-warn 1.6s ease-in-out infinite; }
+    .chip-unsafe  { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,59,48,0.5);
+                    animation:shake-danger 1.4s ease-in-out infinite; }
+
+    /* ── PRED CARD ── */
+    .param-panels { margin-top:24px; }
+    .param-pair {
+      display:grid; grid-template-columns:340px 1fr; gap:14px;
+      margin-bottom:14px; align-items:stretch;
+    }
+    .pred-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow-sm);
+      transition:all 0.3s;
+      animation:fade-up 0.4s ease both;
+    }
+    .pred-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+    .pred-card-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .pred-param-name {
+      font-size:14px; font-weight:600; color:var(--text);
+      letter-spacing:-0.2px;
+    }
+    .pred-unit { font-size:11px; color:var(--text3); margin-left:3px; }
+    .pred-tag {
+      font-size:9px; font-weight:600; padding:2px 8px; border-radius:4px;
+      font-family:var(--font-mono); letter-spacing:0.04em;
+    }
+    .pred-tag-ml  { background:var(--blue-dim); color:var(--blue); border:1px solid rgba(0,122,255,0.15); }
+    .pred-tag-sym { background:var(--purple-dim); color:var(--purple); border:1px solid rgba(175,82,222,0.15); }
+
+    .pred-row {
+      display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;
+    }
+    .pred-box {
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm); padding:12px;
+      transition:border-color 0.3s, box-shadow 0.3s;
+    }
+    .pred-box.status-safe    {
+      border-color:rgba(40,205,65,0.6);
+      background:linear-gradient(90deg, rgba(40,205,65,0.1) 0%, rgba(40,205,65,0.2) 50%, rgba(40,205,65,0.1) 100%);
+      background-size:300px 100%;
+      animation:shimmer-safe 2s linear infinite;
+      box-shadow: 0 0 10px rgba(40,205,65,0.15);
+    }
+    .pred-box.status-warning { 
+      animation:pulse-warn 1.4s ease-in-out infinite; 
+      box-shadow: 0 0 10px rgba(255,149,0,0.15);
+    }
+    .pred-box.status-unsafe  { 
+      animation:shake-danger 1.2s ease-in-out infinite; 
+      box-shadow: 0 0 10px rgba(255,59,48,0.15);
+    }
+    .pred-box-label {
+      font-size:9px; font-weight:600; letter-spacing:0.1em;
+      text-transform:uppercase; color:var(--text3); margin-bottom:6px;
+    }
+    .pred-box-value {
+      font-family:var(--font-mono); font-size:24px; font-weight:500;
+      color:var(--text); line-height:1;
+      animation:count-up 0.3s ease both;
+    }
+    .pred-box-value.safe    { color:var(--green); }
+    .pred-box-value.warning { color:var(--amber); }
+    .pred-box-value.unsafe  { color:var(--red); }
+    .pred-box-sub {
+      font-size:10px; color:var(--text3); margin-top:5px;
+      font-weight:500; text-transform:uppercase; letter-spacing:0.06em;
+    }
+    .error-delta {
+      background:var(--surface2);
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      padding:8px 12px; display:flex; align-items:center; justify-content:space-between;
+    }
+    .error-label { font-size:9px; color:var(--text3); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+    .error-value { font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--amber); }
+
+    /* ── CHART ── */
+    .chart-wrap {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:16px; height:220px;
+      box-shadow:var(--shadow-sm);
+    }
+    .chart-wrap canvas { max-height:188px; }
+
+    /* ── CHAT ── */
+    .chat-box {
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:16px; height:420px;
+      overflow-y:auto;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .chat-row { display:flex; animation:fade-up 0.3s ease both; }
+    .chat-row.user { justify-content:flex-end; }
+    .chat-bubble {
+      max-width:80%; padding:10px 14px; border-radius:14px;
+      font-size:13px; line-height:1.6;
+    }
+    .bubble-ai {
+      background:var(--surface);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:14px 14px 14px 2px;
+      box-shadow:var(--shadow-sm);
+    }
+    .bubble-user {
+      background:var(--blue);
+      color:#ffffff;
+      border-radius:14px 14px 2px 14px;
+      box-shadow:0 2px 8px var(--blue-glow);
+    }
+    .typing-dots { display:flex; gap:4px; align-items:center; padding:4px 0; }
+    .typing-dots span {
+      width:5px; height:5px; border-radius:50%; background:var(--text3);
+      animation:blink-dot 1.4s infinite both;
+    }
+    .typing-dots span:nth-child(2) { animation-delay:0.16s; }
+    .typing-dots span:nth-child(3) { animation-delay:0.32s; }
+
+    /* ── ACTION ITEM ── */
+    .action-item {
+      display:flex; gap:10px; align-items:flex-start;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-left:3px solid var(--blue);
+      border-radius:var(--radius-sm);
+      padding:10px 14px; font-size:13px; color:var(--text);
+      line-height:1.6; animation:slide-in-right 0.3s ease both;
+    }
+    .action-dot {
+      width:7px; height:7px; border-radius:50%;
+      background:var(--blue); flex-shrink:0; margin-top:5px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size:11px; font-weight:600; color:var(--text2);
+      letter-spacing:0.08em; text-transform:uppercase;
+      margin-bottom:14px; padding-bottom:10px;
+      border-bottom:1px solid var(--border);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:1200px) {
+      .main-grid    { grid-template-columns:300px 1fr; }
+      .agent-grid   { grid-template-columns:1fr; }
+    }
+    @media (max-width:900px) {
+      .main-grid    { grid-template-columns:1fr; }
+      .top-row      { grid-template-columns:1fr; }
+      .param-pair   { grid-template-columns:1fr; }
+    }
+  </style>
+
+</head>
+<!-- BODY -->
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-container">
+        <!-- Modern minimalist water droplet/leaf SVG -->
+        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path>
+          <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" fill="currentColor" fill-opacity="0.2"></path>
+          <path d="M12 14v8"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">Aquaculture <span>WQMS</span></div>
+        <div class="header-sub">Predictive Intelligence · XGBoost + PySR Symbolic Regression · Agentic LLaMA 3.1</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><div class="live-dot"></div>SYSTEM LIVE</div>
+      <div class="ver-tag">v4.5</div>
+    </div>
+  </header>
+
+  <!-- MAIN GRID (Inputs + Top Level Agent Stuff) -->
+  <div class="main-grid" style="grid-template-columns: 320px 1fr; gap: 24px; margin-bottom: 24px;">
+
+    <!-- LEFT COLUMN: Operations & Status -->
+    <div class="flex-col">
+      
+      <!-- SENSOR INPUTS -->
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Sensor Inputs<span id="esp32-status" style="margin-left:auto;font-size:10px;color:var(--text3);font-family:var(--font-mono);font-weight:500">○ Waiting…</span></div>
+        <div class="input-group" style="margin-bottom:12px">
+          <label class="input-label" for="inp-fish">Fish Species</label>
+          <select id="inp-fish" class="input-field" onchange="changeFish(this.value)" style="cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%23666%22/></svg>');background-repeat:no-repeat;background-position:right 10px center">
+            <option value="Tilapia">Tilapia</option>
+            <option value="Catfish">Catfish</option>
+            <option value="Salmon">Salmon</option>
+            <option value="Shrimp">Shrimp</option>
+            <option value="Carp">Carp</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="inp-temp">Temperature (°C)</label>
+          <input id="inp-temp" class="input-field" type="number" step="0.1" value="28.5"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="inp-ph">pH Level</label>
+          <input id="inp-ph" class="input-field" type="number" step="0.01" value="7.2"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="inp-turb">Turbidity (NTU)</label>
+          <input id="inp-turb" class="input-field" type="number" step="0.1" value="28.0"/>
+        </div>
+        <div class="input-group" style="margin-bottom:4px">
+          <label class="input-label" for="inp-tds">TDS (ppm)</label>
+          <input id="inp-tds" class="input-field" type="number" step="1" value="550"/>
+        </div>
+        <button id="run-btn" class="btn btn-primary" onclick="analyzeWater(this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Run Analysis
+        </button>
+      </div>
+
+      <!-- SYSTEM HEALTH (Compact) -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--green)"></span>System Health</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--text2);font-weight:500">Overall Condition</span>
+          <span id="status-badge" class="status-badge badge-standby">STANDBY</span>
+        </div>
+        <div class="health-bar-track">
+          <div id="health-bar" class="health-bar-fill" style="width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="font-size:10px;color:var(--text3)">Critical</span>
+          <span id="health-score-val" style="font-family:var(--font-mono);font-size:11px;color:var(--text2);font-weight:500">—</span>
+          <span style="font-size:10px;color:var(--text3)">Optimal</span>
+        </div>
+        <div id="param-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div>
+      </div>
+      
+      <!-- PIPELINE SUMMARY (Compact) -->
+      <div class="card" style="padding:16px">
+        <div class="card-title" style="margin-bottom:10px"><span class="dot"></span>Pipeline</div>
+        <div id="pipeline-summary" style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:12px">Awaiting sensor data…</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text2)">XGBoost</span>
+            <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--blue-dim);color:var(--blue);font-family:var(--font-mono)">DO predictor</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text2)">PySR Symbolic</span>
+            <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--purple-dim);color:var(--purple);font-family:var(--font-mono)">5 formulas</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text2)">LLaMA 3.1 8B</span>
+            <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--green-dim);color:var(--green);font-family:var(--font-mono)">agent LLM</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /LEFT -->
+
+    <!-- RIGHT COLUMN: Agentic Centerpiece -->
+    <div class="flex-col">
+      <div class="agent-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 100%;">
+        
+        <!-- AGENT THOUGHTS & ASSESSMENT (Huge block) -->
+        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+          <div class="card-title" style="font-size: 13px; margin-bottom: 20px;">
+            <span class="dot" style="background:var(--purple); width: 8px; height: 8px;"></span>Agent Thoughts & Assessment
+          </div>
+          <div id="agent-advice" style="font-size:15px; color:var(--text); line-height:1.8; margin-bottom:20px; min-height:120px; flex: 1;">
+            <span style="color: var(--text3); font-style: italic;">Awaiting analysis to formulate thoughts...</span>
+          </div>
+          
+          <div class="card-title" style="font-size: 11px; margin-bottom: 12px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <span class="dot" style="background:var(--red);"></span>Corrective Directives
+          </div>
+          <div id="action-list" class="flex-col" style="gap:10px"></div>
+        </div>
+
+        <!-- AGENT CHAT -->
+        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+          <div class="card-title" style="font-size: 13px; margin-bottom: 20px;">
+            <span class="dot" style="background:var(--blue); width: 8px; height: 8px;"></span>Interactive Agent Chat
+          </div>
+          <div id="chat-box" class="chat-box" style="flex: 1; height: auto; min-height: 350px;">
+            <div class="chat-row">
+              <div class="chat-bubble bubble-ai">System initialized. I am your Water Quality Monitoring Agent. Run an analysis or ask me a question!</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <input id="chat-input" class="input-field" style="flex:1" placeholder="e.g. What should I do if TDS keeps rising?" onkeydown="if(event.key==='Enter')sendChat()"/>
+            <button class="btn btn-primary" onclick="sendChat()" style="margin-top:0; width:auto; padding: 12px 24px;">Send</button>
+          </div>
+        </div>
+
+      </div>
+      
+      <!-- T+24H FORECAST — wide bar below agent -->
+      <div class="card" style="padding:16px 24px;">
+        <div class="card-title" style="margin-bottom:16px;">
+          <span class="dot" style="background:var(--amber)"></span>Agent's 24h Forecast
+          <span id="tomorrow-badge" class="status-badge badge-standby" style="margin-left:auto;">—</span>
+        </div>
+        <div id="tomorrow-params" style="display: flex; justify-content: space-between; gap: 12px;">
+          <div style="color: var(--text3); font-size: 12px; font-style: italic;">Run an analysis to view forecast.</div>
+        </div>
+      </div>
+
+      <!-- SAFE VALUE REFERENCE — same width as forecast -->
+      <div class="card" style="padding:16px 24px;">
+        <div class="card-title" style="margin-bottom:16px;">
+          <span class="dot" style="background:var(--green)"></span>Safe Value Reference
+          <span id="safe-range-fish" style="margin-left:auto;font-size:11px;font-weight:600;color:var(--text2);font-family:var(--font-mono)">Tilapia</span>
+        </div>
+        <div id="safe-range-params" style="display:flex;justify-content:space-between;gap:12px;">
+          <div style="color:var(--text3);font-size:12px;font-style:italic;">Select a fish to view safe ranges.</div>
+        </div>
+      </div>
+
+    </div><!-- /RIGHT -->
+  </div><!-- /main-grid -->
+
+  <!-- PREDICTION PANELS -->
+  <div class="param-panels">
+    <div class="section-label" style="margin-top:8px">
+      Predictive Analysis &nbsp;·&nbsp; ML vs Symbolic Regression &nbsp;·&nbsp; Error Delta
+    </div>
+
+    <!-- DO -->
+    <div class="param-pair">
+      <div class="pred-card" id="panel-DO">
+        <div class="pred-card-header">
+          <div><span class="pred-param-name">Dissolved Oxygen</span><span class="pred-unit">mg/L</span></div>
+          <span class="pred-tag pred-tag-ml">XGBoost → Virtual Sensor</span>
+        </div>
+        <div class="pred-row">
+          <div class="pred-box" id="ml-box-DO">
+            <div class="pred-box-label">ML Prediction</div>
+            <div class="pred-box-value" id="ml-val-DO">—</div>
+            <div class="pred-box-sub" id="ml-status-DO">awaiting</div>
+          </div>
+          <div class="pred-box" id="formula-box-DO">
+            <div class="pred-box-label">PySR Formula</div>
+            <div class="pred-box-value" id="formula-val-DO">—</div>
+            <div class="pred-box-sub" id="formula-status-DO">awaiting</div>
+          </div>
+        </div>
+        <div class="error-delta">
+          <span class="error-label">Absolute Error |Δ|</span>
+          <span class="error-value" id="err-DO">—</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-DO"></canvas></div>
+    </div>
+
+    <!-- TEMP -->
+    <div class="param-pair">
+      <div class="pred-card" id="panel-Temp">
+        <div class="pred-card-header">
+          <div><span class="pred-param-name">Temperature</span><span class="pred-unit">°C</span></div>
+          <span class="pred-tag pred-tag-sym">Sensor + Formula</span>
+        </div>
+        <div class="pred-row">
+          <div class="pred-box" id="ml-box-Temp">
+            <div class="pred-box-label">Sensor Reading</div>
+            <div class="pred-box-value" id="ml-val-Temp">—</div>
+            <div class="pred-box-sub" id="ml-status-Temp">awaiting</div>
+          </div>
+          <div class="pred-box" id="formula-box-Temp">
+            <div class="pred-box-label">PySR Formula</div>
+            <div class="pred-box-value" id="formula-val-Temp">—</div>
+            <div class="pred-box-sub" id="formula-status-Temp">awaiting</div>
+          </div>
+        </div>
+        <div class="error-delta">
+          <span class="error-label">Absolute Error |Δ|</span>
+          <span class="error-value" id="err-Temp">—</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-Temp"></canvas></div>
+    </div>
+
+    <!-- pH -->
+    <div class="param-pair">
+      <div class="pred-card" id="panel-pH">
+        <div class="pred-card-header">
+          <div><span class="pred-param-name">pH Level</span><span class="pred-unit"></span></div>
+          <span class="pred-tag pred-tag-sym">Sensor + Formula</span>
+        </div>
+        <div class="pred-row">
+          <div class="pred-box" id="ml-box-pH">
+            <div class="pred-box-label">Sensor Reading</div>
+            <div class="pred-box-value" id="ml-val-pH">—</div>
+            <div class="pred-box-sub" id="ml-status-pH">awaiting</div>
+          </div>
+          <div class="pred-box" id="formula-box-pH">
+            <div class="pred-box-label">PySR Formula</div>
+            <div class="pred-box-value" id="formula-val-pH">—</div>
+            <div class="pred-box-sub" id="formula-status-pH">awaiting</div>
+          </div>
+        </div>
+        <div class="error-delta">
+          <span class="error-label">Absolute Error |Δ|</span>
+          <span class="error-value" id="err-pH">—</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-pH"></canvas></div>
+    </div>
+
+    <!-- TURBIDITY -->
+    <div class="param-pair">
+      <div class="pred-card" id="panel-Turbidity">
+        <div class="pred-card-header">
+          <div><span class="pred-param-name">Turbidity</span><span class="pred-unit">NTU</span></div>
+          <span class="pred-tag pred-tag-sym">Sensor + Formula</span>
+        </div>
+        <div class="pred-row">
+          <div class="pred-box" id="ml-box-Turbidity">
+            <div class="pred-box-label">Sensor Reading</div>
+            <div class="pred-box-value" id="ml-val-Turbidity">—</div>
+            <div class="pred-box-sub" id="ml-status-Turbidity">awaiting</div>
+          </div>
+          <div class="pred-box" id="formula-box-Turbidity">
+            <div class="pred-box-label">PySR Formula</div>
+            <div class="pred-box-value" id="formula-val-Turbidity">—</div>
+            <div class="pred-box-sub" id="formula-status-Turbidity">awaiting</div>
+          </div>
+        </div>
+        <div class="error-delta">
+          <span class="error-label">Absolute Error |Δ|</span>
+          <span class="error-value" id="err-Turbidity">—</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-Turbidity"></canvas></div>
+    </div>
+
+    <!-- TDS -->
+    <div class="param-pair">
+      <div class="pred-card" id="panel-TDS">
+        <div class="pred-card-header">
+          <div><span class="pred-param-name">TDS</span><span class="pred-unit">ppm</span></div>
+          <span class="pred-tag pred-tag-sym">Sensor + Formula</span>
+        </div>
+        <div class="pred-row">
+          <div class="pred-box" id="ml-box-TDS">
+            <div class="pred-box-label">Sensor Reading</div>
+            <div class="pred-box-value" id="ml-val-TDS">—</div>
+            <div class="pred-box-sub" id="ml-status-TDS">awaiting</div>
+          </div>
+          <div class="pred-box" id="formula-box-TDS">
+            <div class="pred-box-label">PySR Formula</div>
+            <div class="pred-box-value" id="formula-val-TDS">—</div>
+            <div class="pred-box-sub" id="formula-status-TDS">awaiting</div>
+          </div>
+        </div>
+        <div class="error-delta">
+          <span class="error-label">Absolute Error |Δ|</span>
+          <span class="error-value" id="err-TDS">—</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-TDS"></canvas></div>
+    </div>
+
+  </div><!-- /param-panels -->
+
+<script>
+let previousDoPrediction = null;
+let previousTempPrediction = null;
+let previousPhPrediction = null;
+let previousTurbidityPrediction = null;
+let previousTdsPrediction = null;
+let isAnalyzing    = false;
+let lastSensorData = null;
+
+/* ── RIPPLE ── */
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    const r = document.createElement('span');
+    r.className = 'ripple-el';
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    this.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+  });
+});
+
+/* ── SKELETON LOADERS ── */
+const PARAMS = ['DO','Temp','pH','Turbidity','TDS'];
+
+function showSkeletons() {
+  PARAMS.forEach(p => {
+    const mlV  = document.getElementById('ml-val-' + p);
+    const fV   = document.getElementById('formula-val-' + p);
+    const errV = document.getElementById('err-' + p);
+    if (mlV)  { mlV.textContent = '——'; mlV.classList.add('skeleton'); }
+    if (fV)   { fV.textContent  = '——'; fV.classList.add('skeleton'); }
+    if (errV) { errV.textContent = '——'; errV.classList.add('skeleton'); }
+  });
+}
+
+function hideSkeletons() {
+  PARAMS.forEach(p => {
+    ['ml-val-','formula-val-','err-'].forEach(prefix => {
+      const el = document.getElementById(prefix + p);
+      if (el) el.classList.remove('skeleton');
+    });
+  });
+}
+
+/* ── STREAM TEXT ── */
+function streamText(el, text, speed=16) {
+  return new Promise(resolve => {
+    const words = text.split(' '); let i = 0;
+    function next() {
+      if (i < words.length) { el.innerHTML += words[i++] + ' '; setTimeout(next, speed); }
+      else resolve();
+    }
+    next();
+  });
+}
+
+/* ── ERASE TEXT (backspace animation) ── */
+function eraseText(el, speed=4) {
+  return new Promise(resolve => {
+    function step() {
+      const t = el.textContent;
+      if (!t.length) { resolve(); return; }
+      el.textContent = t.slice(0, -1);
+      setTimeout(step, speed);
+    }
+    step();
+  });
+}
+
+/* ── HELPERS ── */
+function levelClass(level) {
+  return level === 'SAFE' ? 'safe' : level === 'WARNING' ? 'warning' : 'unsafe';
+}
+function badgeClass(status) {
+  return status === 'SAFE' ? 'badge-safe' : status === 'WARNING' ? 'badge-warning' : status === 'UNSAFE' ? 'badge-unsafe' : 'badge-standby';
+}
+function statusBoxClass(level) {
+  return level === 'SAFE' ? 'status-safe' : level === 'WARNING' ? 'status-warning' : level === 'UNSAFE' ? 'status-unsafe' : '';
+}
+
+/* ── RENDER PREDICTIONS ── */
+function renderPredictions(data) {
+  PARAMS.forEach(param => {
+    const mlVal  = data.ml_predictions[param];
+    const fmlVal = data.formula_predictions[param];
+    const err    = data.errors[param];
+    const detail = data.details.find(d => d.parameter === param) || {};
+    const level  = detail.level || 'SAFE';
+    const fLevel = detail.formula_level || 'SAFE';
+
+    const mlValEl = document.getElementById('ml-val-' + param);
+    const mlBoxEl = document.getElementById('ml-box-' + param);
+    const mlSubEl = document.getElementById('ml-status-' + param);
+    if (mlValEl) { mlValEl.textContent = mlVal !== undefined ? Number(mlVal).toFixed(2) : '—'; mlValEl.className = 'pred-box-value ' + levelClass(level); }
+    if (mlSubEl) mlSubEl.textContent = level;
+    if (mlBoxEl) mlBoxEl.className = 'pred-box ' + statusBoxClass(level);
+
+    const fValEl = document.getElementById('formula-val-' + param);
+    const fBoxEl = document.getElementById('formula-box-' + param);
+    const fSubEl = document.getElementById('formula-status-' + param);
+    if (fValEl) { fValEl.textContent = fmlVal !== undefined ? Number(fmlVal).toFixed(2) : '—'; fValEl.className = 'pred-box-value ' + levelClass(fLevel); }
+    if (fSubEl) fSubEl.textContent = fLevel;
+    if (fBoxEl) fBoxEl.className = 'pred-box ' + statusBoxClass(fLevel);
+
+    const errEl = document.getElementById('err-' + param);
+    if (errEl) errEl.textContent = err !== undefined ? Number(err).toFixed(4) : '—';
+  });
+}
+
+/* ── RENDER STATUS ── */
+function renderStatus(status, score) {
+  const badge = document.getElementById('status-badge');
+  badge.textContent = status;
+  badge.className   = 'status-badge ' + badgeClass(status);
+  document.getElementById('health-bar').style.width = (score || 0) + '%';
+  document.getElementById('health-score-val').textContent = (score || 0) + ' / 100';
+}
+
+/* ── RENDER CHIPS ── */
+function renderChips(details) {
+  const c = document.getElementById('param-chips');
+  c.innerHTML = '';
+  details.forEach(d => {
+    const chip = document.createElement('span');
+    chip.className = 'chip chip-' + levelClass(d.level);
+    chip.textContent = d.parameter + ': ' + d.level;
+    c.appendChild(chip);
+  });
+}
+
+/* ── RENDER TOMORROW ── */
+function renderTomorrow(tomorrow) {
+  const badge = document.getElementById('tomorrow-badge');
+  badge.textContent = tomorrow.status;
+  badge.className   = 'status-badge ' + badgeClass(tomorrow.status);
+
+  const container = document.getElementById('tomorrow-params');
+  container.innerHTML = '';
+  ['DO','Temp','pH','Turbidity','TDS'].forEach(p => {
+    const val = tomorrow.ml_predictions && tomorrow.ml_predictions[p];
+    if (val === undefined) return;
+    const det = (tomorrow.details || []).find(d => d.parameter === p) || {};
+    const lvl = det.level || 'SAFE';
+    const anim = lvl === 'UNSAFE' ? 'shake-danger 1.2s ease-in-out infinite' : lvl === 'WARNING' ? 'pulse-warn 1.4s ease-in-out infinite' : '';
+    const borderColor = lvl === 'UNSAFE' ? 'rgba(255,59,48,0.3)' : lvl === 'WARNING' ? 'rgba(255,159,10,0.3)' : 'var(--border)';
+    const box = document.createElement('div');
+    box.style.cssText = `flex: 1; background:var(--surface);border:1px solid ${borderColor};border-radius:var(--radius-sm);padding:14px 16px;${anim ? 'animation:' + anim : ''}`;
+    box.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.1em;text-transform:uppercase;">${p}</span>
+        <span style="font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; padding: 2px 6px; border-radius: 4px; background: ${lvl === 'SAFE' ? 'var(--green-dim)' : lvl === 'WARNING' ? 'var(--amber-dim)' : 'var(--red-dim)'}; color: ${lvl === 'SAFE' ? 'var(--green)' : lvl === 'WARNING' ? 'var(--amber)' : 'var(--red)'};">${lvl}</span>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:20px;font-weight:500" class="${levelClass(lvl)}">${Number(val).toFixed(2)}</div>`;
+    container.appendChild(box);
+  });
+}
+
+/* ── RENDER AGENT ── */
+async function renderAgent(data) {
+  const adviceEl  = document.getElementById('agent-advice');
+  const actionsEl = document.getElementById('action-list');
+  actionsEl.innerHTML = '';
+
+  let fullText = data.general_advice || '';
+  let narrative = fullText;
+  let actionLines = [];
+  const splitIdx = fullText.indexOf('Corrective Actions:');
+  if (splitIdx !== -1) {
+    narrative   = fullText.slice(0, splitIdx).trim();
+    const rest  = fullText.slice(splitIdx + 'Corrective Actions:'.length);
+    actionLines = rest.split('\n').map(l => l.trim()).filter(l => l.startsWith('*')).map(l => l.replace(/^\*\s*/, ''));
+  } else {
+    const lines = fullText.split('\n');
+    const firstAction = lines.findIndex(l => l.trim().startsWith('* '));
+    if (firstAction !== -1) {
+      narrative   = lines.slice(0, firstAction).join('\n').trim();
+      actionLines = lines.slice(firstAction).filter(l => l.trim().startsWith('*')).map(l => l.trim().replace(/^\*\s*/, ''));
+    }
+  }
+
+  if (adviceEl.textContent.trim().length) await eraseText(adviceEl, 4);
+  await streamText(adviceEl, narrative || 'Analysis complete.', 14);
+
+  const allActions = [...(data.parameter_actions || []), ...actionLines];
+  for (const action of allActions.slice(0, 4)) {
+    if (!action) continue;
+    const item = document.createElement('div');
+    item.className = 'action-item';
+    item.innerHTML = '<div class="action-dot"></div><span></span>';
+    actionsEl.appendChild(item);
+    await streamText(item.querySelector('span'), action, 13);
+  }
+}
+
+/* ── CHARTS ── */
+const CHART_COLORS = {
+  DO:        '#007AFF',
+  Temp:      '#34C759',
+  pH:        '#FF9F0A',
+  Turbidity: '#AF52DE',
+  TDS:       '#FF3B30',
+};
+const CHART_LABELS   = ['t-4','t-3','t-2','t-1','Now','ML','Formula'];
+const chartInstances = {};
+const chartHistory   = { DO:[], Temp:[], pH:[], Turbidity:[], TDS:[] };
+
+function initChart(param) {
+  const ctx = document.getElementById('chart-' + param);
+  if (!ctx) return;
+  const color = CHART_COLORS[param];
+  chartInstances[param] = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: CHART_LABELS,
+      datasets: [
+        { label:'Historical', data:[null,null,null,null,null,null,null],
+          borderColor:color, backgroundColor:color+'18',
+          borderWidth:2, pointRadius:[3,3,3,3,5,0,0],
+          pointBackgroundColor:'#1C1C1E', pointBorderColor:color, tension:0.35, fill:true },
+        { label:'ML', data:[null,null,null,null,null,null,null],
+          borderColor:color, backgroundColor:'transparent',
+          borderWidth:2, borderDash:[5,4], pointRadius:[0,0,0,0,0,7,0],
+          pointStyle:'rectRounded', pointBackgroundColor:color, tension:0 },
+        { label:'Formula', data:[null,null,null,null,null,null,null],
+          borderColor:'#8E8E93', backgroundColor:'transparent',
+          borderWidth:2, borderDash:[3,3], pointRadius:[0,0,0,0,0,0,7],
+          pointStyle:'triangle', pointBackgroundColor:'#8E8E93', tension:0 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:700, easing:'easeInOutQuart' },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,0.05)' }, ticks:{ color:'#8E8E93', font:{ family:'Inter', size:9 } } },
+        y: { 
+          grid:{ color:'rgba(255,255,255,0.05)' }, 
+          ticks:{ color:'#8E8E93', font:{ family:'Inter', size:9 } }, 
+          border:{ display:false },
+          suggestedMin: param === 'DO' ? 0 : param === 'pH' ? 0 : param === 'Temp' ? 10 : param === 'Turbidity' ? 0 : 0,
+          suggestedMax: param === 'DO' ? 15 : param === 'pH' ? 14 : param === 'Temp' ? 40 : param === 'Turbidity' ? 100 : 1000
+        }
+      },
+      plugins: {
+        legend:{ display:false },
+        title:{ display:true, align:'start', text:param, color:'#EBEBF5', font:{ family:'Inter', size:11, weight:'600' }, padding:{ bottom:10 } },
+        tooltip:{ backgroundColor:'rgba(28,28,30,0.95)', borderColor:'rgba(255,255,255,0.1)', borderWidth:1,
+          titleColor:'#FFFFFF', bodyColor:'#EBEBF5',
+          titleFont:{ family:'Inter', size:11 }, bodyFont:{ family:"'SF Mono','Fira Mono',monospace", size:10 },
+          padding:10, cornerRadius:10, displayColors:false }
+      }
+    }
+  });
+}
+['DO','Temp','pH','Turbidity','TDS'].forEach(initChart);
+
+function updateCharts(ml, formula, currentInputs) {
+  const now = { Temp:currentInputs.Temp, pH:currentInputs.pH, Turbidity:currentInputs.Turbidity, TDS:currentInputs.TDS, DO:ml.DO };
+  PARAMS.forEach(param => {
+    const ch = chartInstances[param];
+    if (!ch) return;
+    const hist = chartHistory[param];
+    hist.push(now[param]);
+    if (hist.length > 4) hist.shift();
+    const padded = Array(4).fill(null);
+    hist.forEach((v, i) => { padded[i + (4 - hist.length)] = v; });
+    ch.data.datasets[0].data = [...padded, now[param], null, null];
+    ch.data.datasets[1].data = [null,null,null,null,now[param],ml[param],null];
+    ch.data.datasets[2].data = [null,null,null,null,now[param],null,formula[param]];
+    ch.update();
+  });
+}
+
+/* ── MAIN ANALYSIS ── */
+async function analyzeWater(btnEl) {
+  if (isAnalyzing) return;
+  isAnalyzing = true;
+  const btn = btnEl || document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div>&nbsp;Analyzing…';
+
+  document.getElementById('pipeline-summary').textContent = 'Analyzing… previous values shown below';
+
+  const Temp      = parseFloat(document.getElementById('inp-temp').value)  || 28.5;
+  const pH        = parseFloat(document.getElementById('inp-ph').value)    || 7.2;
+  const Turbidity = parseFloat(document.getElementById('inp-turb').value)  || 28.0;
+  const TDS       = parseFloat(document.getElementById('inp-tds').value)   || 550;
+  const fish_type = document.getElementById('inp-fish').value || 'Tilapia';
+
+  try {
+    const res  = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        Temp, pH, Turbidity, TDS, fish_type,
+        do_lag1: previousDoPrediction,
+        temp_lag1: previousTempPrediction,
+        ph_lag1: previousPhPrediction,
+        turbidity_lag1: previousTurbidityPrediction,
+        tds_lag1: previousTdsPrediction
+      })
+    });
+    const json = await res.json();
+    const data = json.today;
+    const tmrw = json.tomorrow;
+
+    renderStatus(data.status, data.health_score);
+    document.getElementById('pipeline-summary').textContent = 'Complete — ' + new Date().toLocaleTimeString();
+    renderPredictions(data);
+    renderChips(data.details);
+    renderTomorrow(tmrw);
+    updateCharts(data.ml_predictions, data.formula_predictions, { Temp, pH, Turbidity, TDS });
+    await renderAgent(data);
+
+    previousDoPrediction        = data.ml_predictions.DO;
+    previousTempPrediction      = data.ml_predictions.Temp;
+    previousPhPrediction        = data.ml_predictions.pH;
+    previousTurbidityPrediction = data.ml_predictions.Turbidity;
+    previousTdsPrediction       = data.ml_predictions.TDS;
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('pipeline-summary').textContent = 'Error — ensure FastAPI server is running.';
+    document.getElementById('agent-advice').textContent = 'Backend unreachable. Run: uvicorn app.main:app --reload';
+  } finally {
+    isAnalyzing   = false;
+    btn.disabled  = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Analysis';
+  }
+}
+
+/* ── CHAT ── */
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg   = input.value.trim();
+  if (!msg) return;
+  const box = document.getElementById('chat-box');
+
+  const uRow = document.createElement('div');
+  uRow.className = 'chat-row user';
+  uRow.innerHTML = `<div class="chat-bubble bubble-user">${msg}</div>`;
+  box.appendChild(uRow);
+  input.value = '';
+  box.scrollTop = box.scrollHeight;
+
+  // Elegant typing dots
+  const tRow = document.createElement('div');
+  tRow.className = 'chat-row';
+  tRow.innerHTML = '<div class="chat-bubble bubble-ai"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  box.appendChild(tRow);
+  box.scrollTop = box.scrollHeight;
+
+  try {
+    const res  = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    box.removeChild(tRow);
+
+    const aRow   = document.createElement('div');
+    aRow.className = 'chat-row';
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble bubble-ai';
+    aRow.appendChild(bubble);
+    box.appendChild(aRow);
+    box.scrollTop = box.scrollHeight;
+
+    await streamText(bubble, data.response || 'No response.', 16);
+    box.scrollTop = box.scrollHeight;
+  } catch {
+    box.removeChild(tRow);
+    const eRow = document.createElement('div');
+    eRow.className = 'chat-row';
+    eRow.innerHTML = '<div class="chat-bubble bubble-ai" style="color:var(--red);border-color:rgba(255,59,48,0.3)">AI assistant unavailable.</div>';
+    box.appendChild(eRow);
+  }
+}
+
+/* ── LIVE ESP32 AUTO-REFRESH ── */
+async function pollSensor() {
+  try {
+    const res = await fetch('/latest-sensor');
+    const j   = await res.json();
+    const el  = document.getElementById('esp32-status');
+    if (j.connected && j.data) {
+      lastSensorData = j.data;
+      document.getElementById('inp-temp').value = Number(j.data.Temp).toFixed(2);
+      document.getElementById('inp-ph').value   = Number(j.data.pH).toFixed(2);
+      document.getElementById('inp-turb').value = Number(j.data.Turbidity).toFixed(2);
+      document.getElementById('inp-tds').value  = Number(j.data.TDS).toFixed(0);
+      if (el) { el.textContent = '● LIVE'; el.style.color = 'var(--green)'; }
+    } else {
+      if (el) { el.textContent = '○ Waiting…'; el.style.color = 'var(--text3)'; }
+    }
+  } catch {
+    const el = document.getElementById('esp32-status');
+    if (el) { el.textContent = '✕ Offline'; el.style.color = 'var(--red)'; }
+  }
+}
+
+async function autoAnalyze() {
+  if (isAnalyzing || !lastSensorData) return;
+  await analyzeWater(null);
+}
+
+function changeFish(val) {
+  localStorage.setItem('fish_type', val);
+  location.reload();
+}
+
+const FISH_SAFE_RANGES = {
+  'Tilapia': { Temp: [25.0, 30.0], pH: [7.0,  8.5], DO: [4.0, 12.0], Turbidity: [20.0,  50.0], TDS: [200.0,  800.0] },
+  'Catfish': { Temp: [24.0, 30.0], pH: [6.5,  8.5], DO: [3.0, 10.0], Turbidity: [30.0,  80.0], TDS: [150.0,  600.0] },
+  'Salmon':  { Temp: [12.0, 16.0], pH: [6.5,  8.0], DO: [7.0, 14.0], Turbidity: [0.0,   25.0], TDS: [100.0,  400.0] },
+  'Shrimp':  { Temp: [23.0, 30.0], pH: [7.5,  8.5], DO: [5.0, 10.0], Turbidity: [20.0,  40.0], TDS: [500.0, 1500.0] },
+  'Carp':    { Temp: [20.0, 28.0], pH: [6.5,  8.5], DO: [4.0, 12.0], Turbidity: [20.0,  60.0], TDS: [200.0, 1000.0] },
+};
+
+const FISH_WARN_RANGES = {
+  'Tilapia': { Temp: [20.0, 35.0], pH: [6.0,  9.0], DO: [3.0, 15.0], Turbidity: [10.0,  80.0], TDS: [100.0, 1000.0] },
+  'Catfish': { Temp: [20.0, 34.0], pH: [6.0,  9.0], DO: [2.0, 14.0], Turbidity: [15.0, 120.0], TDS: [100.0,  900.0] },
+  'Salmon':  { Temp:  [8.0, 18.0], pH: [6.0,  8.5], DO: [5.0, 16.0], Turbidity: [0.0,   50.0], TDS:  [50.0,  600.0] },
+  'Shrimp':  { Temp: [20.0, 32.0], pH: [7.0,  9.0], DO: [4.0, 12.0], Turbidity: [10.0,  60.0], TDS: [300.0, 2000.0] },
+  'Carp':    { Temp: [15.0, 32.0], pH: [6.0,  9.0], DO: [3.0, 15.0], Turbidity: [10.0, 100.0], TDS: [100.0, 1500.0] },
+};
+
+function renderSafeRanges(fish) {
+  const container = document.getElementById('safe-range-params');
+  const fishLabel = document.getElementById('safe-range-fish');
+  if (!container || !fish) return;
+  const safe = FISH_SAFE_RANGES[fish];
+  const warn = FISH_WARN_RANGES[fish];
+  if (!safe) return;
+  if (fishLabel) fishLabel.textContent = fish;
+  const params = [
+    { key: 'DO',        label: 'Dissolved O\u2082', unit: 'mg/L'   },
+    { key: 'Temp',      label: 'Temperature',       unit: '\u00b0C' },
+    { key: 'pH',        label: 'pH Level',           unit: 'pH'     },
+    { key: 'Turbidity', label: 'Turbidity',          unit: 'NTU'    },
+    { key: 'TDS',       label: 'TDS',                unit: 'ppm'    },
+  ];
+  container.innerHTML = params.map(p => {
+    const [sLo, sHi] = safe[p.key];
+    const [wLo, wHi] = warn[p.key];
+    const span = wHi - wLo || 1;
+    const leftPct  = ((sLo - wLo) / span * 100).toFixed(1);
+    const widthPct = ((sHi - sLo) / span * 100).toFixed(1);
+    return `<div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.1em;text-transform:uppercase">${p.label}</span>
+        <span style="font-size:9px;font-weight:600;color:var(--text3);font-family:var(--font-mono)">${p.unit}</span>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:500;color:var(--green)">${sLo} \u2013 ${sHi}</div>
+      <div style="height:4px;background:var(--border);border-radius:3px;margin-top:10px;position:relative;overflow:hidden">
+        <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;top:0;bottom:0;background:var(--green);border-radius:3px;opacity:.8"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:3px;font-family:var(--font-mono)"><span>${wLo}</span><span>${wHi}</span></div>
+    </div>`;
+  }).join('');
+}
+
+const FISH_DEFAULTS = {
+  'Tilapia': { temp: 27.5, ph: 7.75, turb: 35.0, tds: 500  },
+  'Catfish': { temp: 27.0, ph: 7.5,  turb: 55.0, tds: 375  },
+  'Salmon':  { temp: 14.0, ph: 7.25, turb: 12.5, tds: 250  },
+  'Shrimp':  { temp: 26.5, ph: 8.0,  turb: 30.0, tds: 1000 },
+  'Carp':    { temp: 24.0, ph: 7.5,  turb: 40.0, tds: 600  },
+};
+
+(function restoreFish() {
+  const saved = localStorage.getItem('fish_type') || 'Tilapia';
+  const sel = document.getElementById('inp-fish');
+  if (sel) sel.value = saved;
+  const def = FISH_DEFAULTS[saved];
+  if (def) {
+    document.getElementById('inp-temp').value = def.temp;
+    document.getElementById('inp-ph').value   = def.ph;
+    document.getElementById('inp-turb').value = def.turb;
+    document.getElementById('inp-tds').value  = def.tds;
+  }
+  renderSafeRanges(saved);
+})();
+
+async function liveUpdateCycle() {
+  await pollSensor();
+  await autoAnalyze();
+}
+
+setInterval(liveUpdateCycle, 60000);
+liveUpdateCycle();
+</script>
+
+</div><!-- /page -->
+</body>
+</html>

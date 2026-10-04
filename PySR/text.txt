@@ -1,0 +1,42 @@
+Compiling Julia backend...
+============================================================
+TRAINING MODEL 1 — DO (NO LAG)
+============================================================
+Training samples : 46050
+Test samples     : 11513
+Target mean±std  : 10.570 ± 4.816
+
+Starting PySR...
+
+---------------------------------------------------------------------------
+ValueError                                Traceback (most recent call last)
+Cell In[5], line 34
+     15 print('\nStarting PySR...\n')
+     17 model_do_nolag = PySRRegressor(
+     18     niterations=500,
+     19     populations=20,
+   (...)     32     parsimony=0.002,
+     33 )
+---> 34 model_do_nolag.fit(X_train, y_train)
+     36 y_pred_train = model_do_nolag.predict(X_train)
+     37 y_pred_test  = model_do_nolag.predict(X_test)
+
+File c:\Users\vmj07\OneDrive\Desktop\PySR\.venv\Lib\site-packages\pysr\sr.py:2318, in PySRRegressor.fit(self, X, y, Xresampled, weights, variable_names, complexity_of_variables, X_units, y_units, category)
+   2315     self._checkpoint()
+   2317 # Perform the search:
+-> 2318 self._run(X, y, runtime_params, weights=weights, seed=seed, category=category)
+   2320 # Then, after fit, we save again, so the pickle file contains
+   2321 # the equations:
+   2322 if not self.temp_equation_file:
+
+File c:\Users\vmj07\OneDrive\Desktop\PySR\.venv\Lib\site-packages\pysr\sr.py:1866, in PySRRegressor._run(self, X, y, runtime_params, weights, category, seed)
+   1861 parallelism, numprocs = _map_parallelism_params(
+   1862     self.parallelism, self.procs, getattr(self, "multithreading", None)
+   1863 )
+...
+   1874         "Note: Setting `random_state` without also setting `deterministic=True` "
+   1875         "and `parallelism='serial'` will result in non-deterministic searches."
+   1876     )
+
+ValueError: To ensure deterministic searches, you must set `parallelism='serial'`. Additionally, make sure to set `random_state` to a seed.
+Output is truncated. View as a scrollable element or open in a text editor. Adjust cell output settings...

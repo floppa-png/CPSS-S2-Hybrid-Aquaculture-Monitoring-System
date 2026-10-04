@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+
+# Graphify output
+graphify-out/
+.graphify_analysis.json

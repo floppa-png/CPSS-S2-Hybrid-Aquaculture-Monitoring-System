@@ -1,0 +1,26 @@
+{
+  "name": "smart-aquaculture-management-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/floppa-png/Smart-Aquaculture-Management-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/floppa-png/Smart-Aquaculture-Management-System/issues"
+  },
+  "homepage": "https://github.com/floppa-png/Smart-Aquaculture-Management-System#readme",
+  "dependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.3.0"
+  }
+}

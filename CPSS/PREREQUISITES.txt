@@ -1,0 +1,117 @@
+================================================================================
+   CPSS — Smart-Aquaculture-Management-System
+   FULL SETUP PREREQUISITES FOR A NEW COMPUTER
+================================================================================
+
+--------------------------------------------------------------------------------
+ SECTION 1: SOFTWARE TO INSTALL
+--------------------------------------------------------------------------------
+
+[1] Python 3.10 or 3.11
+    → Download from: https://www.python.org/downloads/
+    → During install: CHECK "Add Python to PATH"
+
+[2] Node.js (v18 or later)
+    → Download from: https://nodejs.org/
+    → Needed only for the frontend CSS build (Tailwind)
+
+[3] Ollama (Local LLM Runtime)
+    → Download from: https://ollama.com/download
+    → After installing Ollama, open a terminal and pull the exact model used:
+
+        ollama pull llama3.1:8b-instruct-q4_K_M
+
+    → Then start the Ollama service (it usually auto-starts, but if not):
+
+        ollama serve
+
+    NOTE: The model is ~4.7 GB. Keep Ollama running in the background
+    whenever you use the system — the agent and chat endpoint both call it
+    at http://localhost:11434
+
+[4] Arduino IDE 2.x  (only needed if re-flashing the ESP32)
+    → Download from: https://www.arduino.cc/en/software
+    → In Arduino IDE, install the ESP32 board package via Board Manager:
+        URL: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+--------------------------------------------------------------------------------
+ SECTION 2: PYTHON LIBRARIES
+ (run these commands in your terminal from inside the project folder)
+--------------------------------------------------------------------------------
+
+First, (recommended) create a virtual environment:
+
+    python -m venv .venv
+    .venv\Scripts\activate          ← Windows
+    source .venv/bin/activate       ← Mac/Linux
+
+Then install all Python packages:
+
+    pip install fastapi
+    pip install "uvicorn[standard]"
+    pip install pydantic
+    pip install pandas
+    pip install numpy
+    pip install scikit-learn
+    pip install xgboost
+    pip install joblib
+    pip install requests
+
+Or install everything in one single command:
+
+    pip install fastapi "uvicorn[standard]" pydantic pandas numpy scikit-learn xgboost joblib requests
+
+--------------------------------------------------------------------------------
+ SECTION 3: ARDUINO LIBRARIES
+ (install via Arduino IDE → Tools → Manage Libraries)
+--------------------------------------------------------------------------------
+
+[1] WebSockets by Markus Sattler
+[2] ArduinoJson by Benoit Blanchon
+[3] OneWire by Paul Stoffregen
+[4] DallasTemperature by Miles Burton
+[5] Adafruit ADS1X15 by Adafruit
+
+--------------------------------------------------------------------------------
+ SECTION 4: RUNNING THE PROJECT
+--------------------------------------------------------------------------------
+
+1. Make sure Ollama is running with the model pulled (see Section 1 [3])
+
+2. Activate your virtual environment if you created one:
+       .venv\Scripts\activate
+
+3. Start the FastAPI backend from the ROOT project folder:
+       uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+4. Open your browser and go to:
+       http://localhost:8000
+
+5. If using the ESP32 hardware:
+   - Find your PC's local IP (run: ipconfig in terminal)
+   - Update the FRIEND_PC_IP variable in the Arduino sketch before flashing
+
+--------------------------------------------------------------------------------
+ SECTION 5: RE-TRAINING THE XGBOOST MODEL (optional)
+--------------------------------------------------------------------------------
+
+If you need to retrain the DO prediction model from scratch:
+
+    python model/train_xgboost.py
+
+Make sure the dataset file exists at:
+    data/Aquaculture_Master_Dataset_with_TDS.csv
+
+The trained model will be saved to:
+    model/aquaculture_xgb_do.pkl
+
+NOTE: The .pkl file is already included in the repository, so you only
+need to retrain if you update the dataset.
+
+--------------------------------------------------------------------------------
+ QUICK REFERENCE — ALL pip INSTALLS IN ONE LINE
+--------------------------------------------------------------------------------
+
+    pip install fastapi "uvicorn[standard]" pydantic pandas numpy scikit-learn xgboost joblib requests
+
+================================================================================

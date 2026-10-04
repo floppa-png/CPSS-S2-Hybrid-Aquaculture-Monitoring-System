@@ -1,0 +1,93 @@
+=========================================
+PySR SYMBOLIC REGRESSION MODELS - SUMMARY
+=========================================
+
+1. DO (No Lag)
+-------------
+Best Formula : do = ph + 103.36679/temp
+R² (Train)   : 0.0864
+R² (Test)    : 0.0788
+MSE          : 22.9165
+RMSE         : 4.7871
+MAE          : 3.8784
+
+2. DO (With Lag)
+---------------
+Best Formula : do = 4.7092266*log(do_lag1)
+R² (Train)   : 0.1872
+R² (Test)    : 0.1780
+MSE          : 20.4485
+RMSE         : 4.5220
+MAE          : 3.6172
+
+3. TDS (No Lag)
+--------------
+Best Formula : tds = temp*(temp - 1*49.561565) - 1*(-1104.1257)
+R² (Train)   : 0.0635
+R² (Test)    : 0.0626
+MSE          : 37449.1708
+RMSE         : 193.5179
+MAE          : 147.2476
+
+4. TDS (With Lag)
+----------------
+Best Formula : tds = tds_lag1*0.29160655 + 352.136
+R² (Train)   : 0.2217
+R² (Test)    : 0.2291
+MSE          : 30796.1305
+RMSE         : 175.4883
+MAE          : 138.3769
+
+5. pH (No Lag)
+-------------
+Best Formula : ph = 9.877695 - log(temp)
+R² (Train)   : 0.0518
+R² (Test)    : 0.0520
+MSE          : 1.1637
+RMSE         : 1.0787
+MAE          : 0.8975
+
+6. pH (With Lag)
+---------------
+Best Formula : ph = 2.5795584*sqrt(ph_lag1)
+R² (Train)   : 0.1710
+R² (Test)    : 0.1643
+MSE          : 1.0259
+RMSE         : 1.0128
+MAE          : 0.8179
+
+7. TEMP (No Lag)
+---------------
+Best Formula : temp = 33.131477 - ph
+R² (Train)   : 0.0589
+R² (Test)    : 0.0592
+MSE          : 22.7782
+RMSE         : 4.7727
+MAE          : 3.8796
+
+8. TEMP (With Lag)
+-----------------
+Best Formula : temp = 8.1226*log(temp_lag1)
+R² (Train)   : 0.1417
+R² (Test)    : 0.1405
+MSE          : 20.8085
+RMSE         : 4.5616
+MAE          : 3.6181
+
+9. TURBIDITY (No Lag)
+--------------------
+Best Formula : turbidity = sqrt(tds/ph) + 20.927883
+R² (Train)   : 0.0457
+R² (Test)    : 0.0455
+MSE          : 85.3070
+RMSE         : 9.2362
+MAE          : 7.5318
+
+10. TURBIDITY (With Lag)
+-----------------------
+Best Formula : turbidity = 8.84823*log(turbidity_lag1)
+R² (Train)   : 0.0582
+R² (Test)    : 0.0554
+MSE          : 84.4248
+RMSE         : 9.1883
+MAE          : 7.4741

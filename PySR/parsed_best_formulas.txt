@@ -1,0 +1,80 @@
+Model: print('TRAINING MODEL 1 — DO (NO LAG)')
+Most accurate formula (last row):
+25          2.211e+01  2.651e-05  y = (((ph * (temp * 0.094597)) + 56.216) + ((((temp * (90....
+                                      745 - temp)) - sqrt(turbidity)) / -46.414) + ph)) - (log(p...
+                                      h) * 17.393)
+───────────────────────────────────────────────────────────────────────────────────────────────────
+  - outputs\20260510_164653_2uO1tb\hall_of_fame.csv
+--------------------------------------------------
+Model: print('TRAINING MODEL 2 — DO (WITH LAG)')
+Most accurate formula (last row):
+MAE        : 3.6172
+Best Formula:
+  do = 4.7092266*log(do_lag1)
+============================================================
+  - outputs\20260510_171109_OqxzWa\hall_of_fame.csv
+--------------------------------------------------
+Model: print('TRAINING MODEL 3 — TDS')
+Most accurate formula (last row):
+7           3.061e+04  2.740e-03  y = (turbidity + (tds_lag1 * 0.28061)) + 328.99
+9           3.054e+04  1.574e-04  y = ((temp + 306.88) + (tds_lag1 * 0.27443)) + turbidity
+11          3.052e+04  -0.000e+00  y = ((turbidity + 280.19) - (tds_lag1 * -0.28638)) - (tem...
+                                       p * -1.6009)
+───────────────────────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------
+Model: print('TRAINING MODEL 4 — PH')
+Most accurate formula (last row):
+18          9.715e-01  1.788e-07  y = ((((turbidity / temp) * (ph_lag1 - sqrt(0.27133))) + t...
+                                      emp) * -0.040172) + ((-18.493 / ph_lag1) - -10.849)
+19          9.681e-01  3.524e-03  y = (((((ph_lag1 * (turbidity / temp)) + temp) * -0.047429...
+                                      ) - -11.38) - (4.925 / turbidity)) + (-18.979 / ph_lag1)
+───────────────────────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------
+Model: print('TRAINING MODEL 5 — TEMP')
+Most accurate formula (last row):
+                                      )) + (((ph - 5.884) * -1.4409) - -1.1513)
+20          1.957e+01  3.475e-04  y = ((temp_lag1 * -0.21818) + (ph * log(log(log(temp_lag1 ...
+                                      - log(turbidity)))))) * ((-22.217 / log(temp_lag1)) - -1.4...
+                                      773)
+───────────────────────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------
+Model: print('TRAINING MODEL 6 — TURBIDITY')
+Most accurate formula (last row):
+22          7.636e+01  8.220e-05  y = (tds / 200.67) + ((226.47 / log(temp)) + (((turbidity_...
+                                      lag1 * (((turbidity_lag1 + -37.931) / 200.72) / 0.78822)) ...
+                                      + temp) + -68.302))
+───────────────────────────────────────────────────────────────────────────────────────────────────
+  - outputs\20260510_184625_thH1Cx\hall_of_fame.csv
+--------------------------------------------------
+Model: print('TRAINING MODEL 6 — TURBIDITYNOLAG')
+Most accurate formula (last row):
+RMSE       : 9.2362
+MAE        : 7.5318
+Best Formula:
+  turbidity = sqrt(tds/ph) + 20.927883
+============================================================
+--------------------------------------------------
+Model: print('TRAINING MODEL 4 — PHNOLAG')
+Most accurate formula (last row):
+MAE        : 0.8975
+Best Formula:
+  ph = 9.877695 - log(temp)
+============================================================
+  - outputs\20260510_193729_CK1HC3\hall_of_fame.csv
+--------------------------------------------------
+Model: print('TRAINING MODEL 5 — TEMPNOLAG')
+Most accurate formula (last row):
+MAE        : 3.8796
+Best Formula:
+  temp = 33.131477 - ph
+============================================================
+  - outputs\20260510_200501_2X1PHN\hall_of_fame.csv
+--------------------------------------------------
+Model: print('TRAINING MODEL 3 — TDSNOLAG')
+Most accurate formula (last row):
+7           3.711e+04  1.341e-02  y = (temp * (temp - 49.562)) - -1104.1
+9           3.691e+04  7.250e-04  y = 1391.9 - (temp * ((temp * -1.3865) + 70.916))
+11          3.670e+04  9.481e-04  y = (((temp * (temp - 49.562)) - -1104.1) + turbidity) - t...
+                                      emp
+───────────────────────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------

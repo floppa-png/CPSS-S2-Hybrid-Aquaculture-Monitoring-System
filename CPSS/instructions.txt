@@ -1,0 +1,11 @@
+.venv\Scripts\Activate
+
+change ip every boot by ipconfig in arduino code
+
+then
+first terminal
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+(ctrl+c for stopping server)
+
+http://localhost:8000/  - frontend
+http://localhost:11434/   - check if ollama is running
